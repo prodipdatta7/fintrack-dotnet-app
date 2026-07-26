@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>FinTrack.Host</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <UserSecretsId>fintrack-host-dev</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.4.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FinTrack.BuildingBlocks\FinTrack.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\FinTrack.Modules.Dashboard\FinTrack.Modules.Dashboard.csproj" />
+    <ProjectReference Include="..\FinTrack.Modules.Transactions\FinTrack.Modules.Transactions.csproj" />
+    <ProjectReference Include="..\FinTrack.Modules.Categories\FinTrack.Modules.Categories.csproj" />
+    <ProjectReference Include="..\FinTrack.Modules.Budgets\FinTrack.Modules.Budgets.csproj" />
+    <ProjectReference Include="..\FinTrack.Modules.Accounts\FinTrack.Modules.Accounts.csproj" />
+    <ProjectReference Include="..\FinTrack.Modules.Users\FinTrack.Modules.Users.csproj" />
+  </ItemGroup>
+</Project>

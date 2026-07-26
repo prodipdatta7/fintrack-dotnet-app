@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>FinTrack.Modules.Budgets</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FinTrack.BuildingBlocks\FinTrack.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\FinTrack.Contracts\FinTrack.Contracts.csproj" />
+  </ItemGroup>
+</Project>
