@@ -1,0 +1,23 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FinTrack.Api/FinTrack.Api.csproj" />
+    <Project Path="src/FinTrack.BuildingBlocks/FinTrack.BuildingBlocks.csproj" />
+    <Project Path="src/FinTrack.Contracts/FinTrack.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/">
+    <Project Path="src/FinTrack.Modules.Users/FinTrack.Modules.Users.csproj" />
+    <Project Path="src/FinTrack.Modules.Transactions/FinTrack.Modules.Transactions.csproj" />
+    <Project Path="src/FinTrack.Modules.Categories/FinTrack.Modules.Categories.csproj" />
+    <Project Path="src/FinTrack.Modules.Dashboard/FinTrack.Modules.Dashboard.csproj" />
+    <Project Path="src/FinTrack.Modules.Budgets/FinTrack.Modules.Budgets.csproj" />
+    <Project Path="src/FinTrack.Modules.Accounts/FinTrack.Modules.Accounts.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FinTrack.Modules.Users.Tests/FinTrack.Modules.Users.Tests.csproj" />
+    <Project Path="tests/FinTrack.Modules.Transactions.Tests/FinTrack.Modules.Transactions.Tests.csproj" />
+    <Project Path="tests/FinTrack.Modules.Categories.Tests/FinTrack.Modules.Categories.Tests.csproj" />
+    <Project Path="tests/FinTrack.Modules.Dashboard.Tests/FinTrack.Modules.Dashboard.Tests.csproj" />
+    <Project Path="tests/FinTrack.Modules.Budgets.Tests/FinTrack.Modules.Budgets.Tests.csproj" />
+    <Project Path="tests/FinTrack.Modules.Accounts.Tests/FinTrack.Modules.Accounts.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: docker/phase2/Dockerfile
+      target: api
+    container_name: fintrack-api-phase2
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MongoDb__ConnectionString=mongodb://mongo:27017/FinTrackDb
+      - RabbitMq__Host=rabbitmq
+      - RabbitMq__Username=guest
+      - RabbitMq__Password=guest
+      - Jwt__Issuer=FinTrack
+      - Jwt__Audience=FinTrack
+      - Jwt__SigningKey=SuperSecretKeyForLocalDev1234567890!
+    depends_on:
+      - mongo
+      - rabbitmq
+
+  host-worker:
+    build:
+      context: ../..
+      dockerfile: docker/phase2/Dockerfile
+      target: host
+    container_name: fintrack-host-phase2
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MongoDb__ConnectionString=mongodb://mongo:27017/FinTrackDb
+      - RabbitMq__Host=rabbitmq
+      - RabbitMq__Username=guest
+      - RabbitMq__Password=guest
+    depends_on:
+      - mongo
+      - rabbitmq
+
+  mongo:
+    image: mongo:latest
+    container_name: fintrack-mongo-phase2
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data_phase2:/data/db
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: fintrack-rabbitmq-phase2
+    ports:
+      - "5672:5672"   # AMQP Protocol
+      - "15672:15672" # RabbitMQ Management Dashboard
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+
+volumes:
+  mongo_data_phase2:
