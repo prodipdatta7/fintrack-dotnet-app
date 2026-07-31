@@ -55,7 +55,14 @@ internal sealed class GetTransactionsHandler
             t.Type,
             t.CategoryId,
             t.AccountId,
-            t.Date)).ToList();
+            t.Date,
+            t.TimeZoneOffsetInMinutes,
+            t.Time,
+            t.PaymentMethod,
+            t.ReceiptFileName,
+            t.ReceiptUrl,
+            t.Tags,
+            t.Attachments?.Select(a => new TransactionAttachmentDto(a.FileName, a.FileUrl)).ToList() ?? new List<TransactionAttachmentDto>())).ToList();
 
         var pagedResult = new PagedResult<TransactionDto>(dtos, totalCount, page, pageSize);
 

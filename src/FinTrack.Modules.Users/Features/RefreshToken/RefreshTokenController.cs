@@ -15,16 +15,49 @@ public sealed class RefreshTokenController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("refresh")]
+    [HttpPost("refresh-token")]
     [ProducesResponseType(typeof(RefreshTokenResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Refresh(
-        [FromBody] RefreshTokenCommand command,
+        [FromBody] RefreshTokenCommand? command,
         CancellationToken ct)
     {
-        var result = await _sender.Send(command, ct);
+        var tokenToUse = command?.RefreshToken;
+        if (string.IsNullOrEmpty(tokenToUse) && Request.Cookies.TryGetValue("refresh_token", out var cookieRefreshToken))
+        {
+            tokenToUse = cookieRefreshToken;
+        }
 
-        return result.IsSuccess
-            ? Ok(result.Value)
-            : BadRequest(new { error = result.Error });
+        if (string.IsNullOrEmpty(tokenToUse))
+        {
+            return BadRequest(new { error = "Refresh token is required." });
+        }
+
+        var result = await _sender.Send(new RefreshTokenCommand(tokenToUse), ct);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { error = result.Error });
+
+        var isSecure = Request.IsHttps;
+        var cookieOptionsAccess = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isSecure,
+            SameSite = SameSiteMode.Lax,
+            Expires = result.Value!.ExpiresAt
+        };
+
+        var cookieOptionsRefresh = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isSecure,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTime.UtcNow.AddDays(7)
+        };
+
+        Response.Cookies.Append("access_token", result.Value!.AccessToken, cookieOptionsAccess);
+        Response.Cookies.Append("refresh_token", result.Value!.RefreshToken, cookieOptionsRefresh);
+
+        return Ok(result.Value);
     }
 }

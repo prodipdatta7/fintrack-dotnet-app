@@ -23,8 +23,47 @@ public sealed class LoginController : ControllerBase
     {
         var result = await _sender.Send(command, ct);
 
-        return result.IsSuccess
-            ? Ok(result.Value)
-            : BadRequest(new { error = result.Error });
+        if (!result.IsSuccess)
+            return BadRequest(new { error = result.Error });
+
+        var isSecure = Request.IsHttps;
+        var cookieOptionsAccess = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isSecure,
+            SameSite = SameSiteMode.Lax,
+            Expires = result.Value!.ExpiresAt
+        };
+
+        var cookieOptionsRefresh = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isSecure,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTime.UtcNow.AddDays(7)
+        };
+
+        Response.Cookies.Append("access_token", result.Value!.AccessToken, cookieOptionsAccess);
+        Response.Cookies.Append("refresh_token", result.Value!.RefreshToken, cookieOptionsRefresh);
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("logout")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public IActionResult Logout()
+    {
+        var isSecure = Request.IsHttps;
+        var deleteOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isSecure,
+            SameSite = SameSiteMode.Lax
+        };
+
+        Response.Cookies.Delete("access_token", deleteOptions);
+        Response.Cookies.Delete("refresh_token", deleteOptions);
+
+        return Ok(new { message = "Logged out successfully." });
     }
 }

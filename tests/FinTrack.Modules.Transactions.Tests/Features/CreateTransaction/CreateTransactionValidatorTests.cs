@@ -13,8 +13,16 @@ public class CreateTransactionValidatorTests
     public void Validate_WhenValidCommand_ReturnsNoErrors()
     {
         // Arrange
-        var command = new CreateTransactionCommand(
-            "Grocery Shopping", 45.50m, TransactionType.Expense, "cat123", "acc123", DateTime.UtcNow, 0);
+        var command = new CreateTransactionCommand
+        {
+            Title = "Grocery Shopping",
+            Amount = 45.50m,
+            Type = TransactionType.Expense,
+            CategoryId = "cat123",
+            AccountId = "acc123",
+            Date = DateTime.UtcNow,
+            TimeZoneOffsetInMinutes = 0
+        };
 
         // Act
         var result = _validator.Validate(command);
@@ -33,8 +41,16 @@ public class CreateTransactionValidatorTests
         string title, decimal amount, string categoryId, string accountId)
     {
         // Arrange
-        var command = new CreateTransactionCommand(
-            title, amount, TransactionType.Expense, categoryId, accountId, DateTime.UtcNow, 0);
+        var command = new CreateTransactionCommand
+        {
+            Title = title,
+            Amount = amount,
+            Type = TransactionType.Expense,
+            CategoryId = categoryId,
+            AccountId = accountId,
+            Date = DateTime.UtcNow,
+            TimeZoneOffsetInMinutes = 0
+        };
 
         // Act
         var result = _validator.Validate(command);

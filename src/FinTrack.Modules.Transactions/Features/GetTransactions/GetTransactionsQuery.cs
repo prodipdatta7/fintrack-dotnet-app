@@ -13,6 +13,8 @@ public sealed record GetTransactionsQuery(
     DateTime? FromDate = null,
     DateTime? ToDate = null) : IRequest<Result<PagedResult<TransactionDto>>>;
 
+public sealed record TransactionAttachmentDto(string FileName, string FileUrl);
+
 public sealed record TransactionDto(
     string Id,
     string Title,
@@ -20,4 +22,11 @@ public sealed record TransactionDto(
     TransactionType Type,
     string CategoryId,
     string AccountId,
-    DateTime Date);
+    DateTime Date,
+    int TimeZoneOffsetInMinutes = 0,
+    string Time = "",
+    string PaymentMethod = "",
+    string ReceiptFileName = "",
+    string ReceiptUrl = "",
+    string Tags = "",
+    IReadOnlyList<TransactionAttachmentDto>? Attachments = null);
