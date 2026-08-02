@@ -86,7 +86,7 @@ internal sealed class CreateTransactionHandler : IRequestHandler<CreateTransacti
 
             await session.CommitTransactionAsync(cancellationToken);
         }
-        catch (NotSupportedException)
+        catch (Exception ex) when (ex is NotSupportedException || ex is MongoException || ex is InvalidOperationException)
         {
             // Standalone MongoDB instances without replica sets do not support transactions
             await _transactions.InsertOneAsync(transaction, cancellationToken: cancellationToken);

@@ -2,6 +2,7 @@ using System.Text;
 using FinTrack.BuildingBlocks.Auth;
 using FinTrack.BuildingBlocks.Behaviors;
 using FinTrack.BuildingBlocks.Persistence;
+using FinTrack.BuildingBlocks.Storage;
 using FinTrack.Modules.Accounts;
 using FinTrack.Modules.Budgets;
 using FinTrack.Modules.Categories;
@@ -71,6 +72,7 @@ builder.Services.AddMongoDb(builder.Configuration);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
 builder.Services.AddCors(options =>
 {
@@ -156,6 +158,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseCors("AllowFrontendApp");
 
 app.UseAuthentication();

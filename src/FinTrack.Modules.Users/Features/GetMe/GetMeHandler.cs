@@ -28,6 +28,6 @@ internal sealed class GetMeHandler : IRequestHandler<GetMeQuery, Result<GetMeRes
             return Result<GetMeResponse>.Failure("User not found.");
 
         return Result<GetMeResponse>.Success(new GetMeResponse(
-            user.Id, user.Email, user.FirstName, user.LastName));
+            user.Id, user.Email, user.FirstName, user.LastName, user.AvatarUrl));
     }
 }

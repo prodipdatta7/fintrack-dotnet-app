@@ -89,7 +89,7 @@ internal sealed class UpdateTransactionHandler : IRequestHandler<UpdateTransacti
 
             await session.CommitTransactionAsync(cancellationToken);
         }
-        catch (NotSupportedException)
+        catch (Exception ex) when (ex is NotSupportedException || ex is MongoException || ex is InvalidOperationException)
         {
             await _transactions.UpdateOneAsync(
                 t => t.Id == request.Id && t.UserId == _currentUser.UserId,

@@ -63,7 +63,7 @@ internal sealed class DeleteTransactionHandler : IRequestHandler<DeleteTransacti
             await session.AbortTransactionAsync(cancellationToken);
             return Result.Failure("Transaction not found.");
         }
-        catch (NotSupportedException)
+        catch (Exception ex) when (ex is NotSupportedException || ex is MongoException || ex is InvalidOperationException)
         {
             var result = await _transactions.DeleteOneAsync(
                 t => t.Id == request.Id && t.UserId == _currentUser.UserId,

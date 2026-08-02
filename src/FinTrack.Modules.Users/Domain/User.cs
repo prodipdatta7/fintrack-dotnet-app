@@ -9,6 +9,7 @@ public sealed class User : AuditableEntity
     public string PasswordHash { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
+    public string AvatarUrl { get; set; } = string.Empty;
 
     [BsonIgnore]
     public string FullName => $"{FirstName} {LastName}".Trim();

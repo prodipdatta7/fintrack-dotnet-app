@@ -9,4 +9,5 @@ public sealed record GetMeResponse(
     string UserId,
     string Email,
     string FirstName,
-    string LastName);
+    string LastName,
+    string AvatarUrl = "");
