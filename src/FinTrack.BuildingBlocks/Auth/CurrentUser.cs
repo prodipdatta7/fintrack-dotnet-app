@@ -20,6 +20,7 @@ public sealed class CurrentUser : ICurrentUser
 
     public string Email =>
         User?.FindFirstValue(ClaimTypes.Email)
+        ?? User?.FindFirstValue("email")
         ?? string.Empty;
 
     public bool IsAuthenticated =>

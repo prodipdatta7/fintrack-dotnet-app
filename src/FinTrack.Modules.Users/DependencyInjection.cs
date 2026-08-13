@@ -13,8 +13,8 @@ public static class DependencyInjection
 
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
 
-        services.AddScoped<ITokenService, TokenService>();
-        services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IFirebaseUserResolver, FirebaseUserResolver>();
+        services.AddScoped<IFirebaseAuthService, FirebaseAuthService>();
 
         return services;
     }
