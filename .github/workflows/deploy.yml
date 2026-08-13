@@ -1,0 +1,43 @@
+name: Build and Deploy .NET to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: "read"
+      id-token: "write"
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/37295753542/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
+          service_account: "github-deployer@project-ff478c11-624a-44ac-9a5.iam.gserviceaccount.com"
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Authorize Docker Push
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Build and Push Docker Image
+        run: |
+          IMAGE_TAG="us-central1-docker.pkg.dev/project-ff478c11-624a-44ac-9a5/dotnet-apps/dotnet-web-app:${{ github.sha }}"
+          docker build -t $IMAGE_TAG .
+          docker push $IMAGE_TAG
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: dotnet-web-app
+          region: us-central1
+          image: us-central1-docker.pkg.dev/project-ff478c11-624a-44ac-9a5/dotnet-apps/dotnet-web-app:${{ github.sha }}
+          flags: "--allow-unauthenticated"
