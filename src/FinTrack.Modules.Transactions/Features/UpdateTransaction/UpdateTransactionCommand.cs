@@ -21,5 +21,6 @@ public sealed class UpdateTransactionCommand : IRequest<Result>
     public string ReceiptFileName { get; init; } = string.Empty;
     public string ReceiptUrl { get; init; } = string.Empty;
     public string Tags { get; init; } = string.Empty;
+    public string Note { get; init; } = string.Empty;
     public List<TransactionAttachmentDto> Attachments { get; init; } = new();
 }

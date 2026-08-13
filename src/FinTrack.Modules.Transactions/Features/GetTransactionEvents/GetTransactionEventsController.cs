@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinTrack.Modules.Transactions.Features.GetTransactionEvents;
 
 [ApiController]
-[Route("api/transactions")]
+[Route("api")]
 public sealed class GetTransactionEventsController : ControllerBase
 {
     private readonly ISender _sender;
@@ -14,7 +14,7 @@ public sealed class GetTransactionEventsController : ControllerBase
         _sender = sender;
     }
 
-    [HttpGet("{id}/events")]
+    [HttpGet("get-transaction-events/{id}")]
     public async Task<IActionResult> GetTransactionEvents(string id, CancellationToken cancellationToken)
     {
         var result = await _sender.Send(new GetTransactionEventsQuery(id), cancellationToken);

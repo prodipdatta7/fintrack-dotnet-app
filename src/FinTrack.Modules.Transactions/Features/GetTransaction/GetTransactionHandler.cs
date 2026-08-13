@@ -42,6 +42,7 @@ internal sealed class GetTransactionHandler : IRequestHandler<GetTransactionQuer
             transaction.ReceiptFileName,
             transaction.ReceiptUrl,
             transaction.Tags,
+            transaction.Note ?? string.Empty,
             transaction.Attachments?.Select(a => new TransactionAttachmentDto(a.FileName, a.FileUrl)).ToList() ?? new List<TransactionAttachmentDto>());
 
         return Result<TransactionDto>.Success(dto);

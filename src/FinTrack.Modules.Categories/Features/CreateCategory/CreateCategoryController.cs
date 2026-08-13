@@ -5,14 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinTrack.Modules.Categories.Features.CreateCategory;
 
 [ApiController]
-[Route("api/categories")]
+[Route("api")]
 public sealed class CreateCategoryController : ControllerBase
 {
     private readonly ISender _sender;
 
     public CreateCategoryController(ISender sender) => _sender = sender;
 
-    [HttpPost]
+    [HttpPost("create-category")]
     [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

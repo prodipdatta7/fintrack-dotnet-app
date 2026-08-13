@@ -6,14 +6,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinTrack.Modules.Transactions.Features.GetTransaction;
 
 [ApiController]
-[Route("api/transactions")]
+[Route("api")]
 public sealed class GetTransactionController : ControllerBase
 {
     private readonly ISender _sender;
 
     public GetTransactionController(ISender sender) => _sender = sender;
 
-    [HttpGet("{id}")]
+    [HttpGet("get-transaction/{id}")]
     [ProducesResponseType(typeof(TransactionDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

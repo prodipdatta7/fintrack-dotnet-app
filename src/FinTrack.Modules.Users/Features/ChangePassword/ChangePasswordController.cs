@@ -5,14 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinTrack.Modules.Users.Features.ChangePassword;
 
 [ApiController]
-[Route("api/users")]
+[Route("api")]
 public sealed class ChangePasswordController : ControllerBase
 {
     private readonly ISender _sender;
 
     public ChangePasswordController(ISender sender) => _sender = sender;
 
-    [HttpPost("me/change-password")]
+    [HttpPost("change-password")]
     [ProducesResponseType(typeof(ChangePasswordResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

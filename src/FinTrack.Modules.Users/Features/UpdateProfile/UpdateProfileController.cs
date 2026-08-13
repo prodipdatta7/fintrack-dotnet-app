@@ -5,14 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinTrack.Modules.Users.Features.UpdateProfile;
 
 [ApiController]
-[Route("api/users")]
+[Route("api")]
 public sealed class UpdateProfileController : ControllerBase
 {
     private readonly ISender _sender;
 
     public UpdateProfileController(ISender sender) => _sender = sender;
 
-    [HttpPut("me")]
+    [HttpPut("update-profile")]
     [ProducesResponseType(typeof(UpdateProfileResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

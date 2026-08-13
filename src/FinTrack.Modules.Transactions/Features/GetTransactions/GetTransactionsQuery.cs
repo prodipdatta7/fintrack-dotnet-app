@@ -11,7 +11,12 @@ public sealed record GetTransactionsQuery(
     TransactionType? Type = null,
     string? CategoryId = null,
     DateTime? FromDate = null,
-    DateTime? ToDate = null) : IRequest<Result<PagedResult<TransactionDto>>>;
+    DateTime? ToDate = null,
+    string? AccountId = null,
+    decimal? MinAmount = null,
+    decimal? MaxAmount = null,
+    string? SearchTerm = null,
+    string? SortBy = null) : IRequest<Result<PagedResult<TransactionDto>>>;
 
 public sealed record TransactionAttachmentDto(string FileName, string FileUrl);
 
@@ -29,4 +34,5 @@ public sealed record TransactionDto(
     string ReceiptFileName = "",
     string ReceiptUrl = "",
     string Tags = "",
+    string Note = "",
     IReadOnlyList<TransactionAttachmentDto>? Attachments = null);

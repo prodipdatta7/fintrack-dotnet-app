@@ -44,7 +44,10 @@ public sealed class GetTransactionEventsHandler
             e.EventType,
             e.OccurredOnUtc,
             e.Summary,
-            e.DataJson
+            e.DataJson,
+            // Events written before these fields existed have no values — fall back to "".
+            e.PerformedBy ?? string.Empty,
+            e.Detail ?? string.Empty
         )).ToList();
 
         return Result<IReadOnlyList<TransactionEventDto>>.Success(dtos);

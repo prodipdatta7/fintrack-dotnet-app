@@ -33,6 +33,7 @@ internal sealed class CreateCategoryHandler : IRequestHandler<CreateCategoryComm
             Type = request.Type,
             Icon = request.Icon,
             Color = request.Color,
+            BudgetLimit = request.BudgetLimit,
             IsDefault = false,
             UserId = _currentUser.UserId,
             CreatedBy = _currentUser.Email

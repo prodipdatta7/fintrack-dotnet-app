@@ -6,5 +6,7 @@ public sealed record TransactionEventDto(
     string EventType,
     DateTime OccurredOnUtc,
     string Summary,
-    string DataJson
+    string DataJson,
+    string PerformedBy = "",
+    string Detail = ""
 );

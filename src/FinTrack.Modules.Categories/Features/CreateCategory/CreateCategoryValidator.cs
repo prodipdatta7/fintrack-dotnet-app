@@ -8,5 +8,6 @@ public sealed class CreateCategoryValidator : AbstractValidator<CreateCategoryCo
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Type).IsInEnum();
+        RuleFor(x => x.BudgetLimit).GreaterThanOrEqualTo(0);
     }
 }

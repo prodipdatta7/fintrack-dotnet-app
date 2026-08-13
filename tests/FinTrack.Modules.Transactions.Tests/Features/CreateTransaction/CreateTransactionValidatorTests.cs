@@ -58,4 +58,42 @@ public class CreateTransactionValidatorTests
         // Assert
         result.IsValid.Should().BeFalse();
     }
+
+    [Fact]
+    public void Validate_WhenNoteIsAtMaxLength_ReturnsNoErrors()
+    {
+        // Arrange
+        var command = ValidCommandWithNote(new string('x', 500));
+
+        // Act
+        var result = _validator.Validate(command);
+
+        // Assert
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Validate_WhenNoteExceedsMaxLength_ReturnsError()
+    {
+        // Arrange
+        var command = ValidCommandWithNote(new string('x', 501));
+
+        // Act
+        var result = _validator.Validate(command);
+
+        // Assert
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.PropertyName == "Note");
+    }
+
+    private static CreateTransactionCommand ValidCommandWithNote(string note) => new()
+    {
+        Title = "Grocery Shopping",
+        Amount = 45.50m,
+        Type = TransactionType.Expense,
+        CategoryId = "cat123",
+        AccountId = "acc123",
+        Date = DateTime.UtcNow,
+        Note = note
+    };
 }

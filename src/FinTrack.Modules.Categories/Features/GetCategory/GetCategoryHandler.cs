@@ -22,7 +22,7 @@ internal sealed class GetCategoryHandler : IRequestHandler<GetCategoryQuery, Res
         GetCategoryQuery request, CancellationToken cancellationToken)
     {
         var category = await _categories
-            .Find(c => c.Id == request.Id && (c.UserId == _currentUser.UserId || c.UserId == string.Empty))
+            .Find(c => c.Id == request.Id && c.UserId == _currentUser.UserId)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (category is null)
@@ -34,7 +34,8 @@ internal sealed class GetCategoryHandler : IRequestHandler<GetCategoryQuery, Res
             category.Type,
             category.Icon,
             category.Color,
-            category.UserId == string.Empty);
+            category.IsDefault,
+            category.BudgetLimit);
 
         return Result<CategoryDto>.Success(dto);
     }

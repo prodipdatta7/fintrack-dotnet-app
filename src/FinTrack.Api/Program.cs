@@ -72,38 +72,86 @@ builder.Services.AddMongoDb(builder.Configuration);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
-builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+
+var storageProvider = builder.Configuration["Storage:Provider"] ?? "Local";
+if (string.Equals(storageProvider, "Gcs", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddSingleton<IFileStorageService, GcsFileStorageService>();
+}
+else
+{
+    builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+}
+
+var corsOrigins = (builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [])
+    .Where(static o => !string.IsNullOrWhiteSpace(o))
+    .ToArray();
+
+if (corsOrigins.Length == 0 && builder.Environment.IsDevelopment())
+{
+    corsOrigins = ["http://localhost:4200", "http://localhost:3000"];
+}
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontendApp", policy =>
-        policy.WithOrigins("http://localhost:4200", "http://localhost:3000")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials());
+    {
+        // Same-origin Firebase Hosting → Cloud Run rewrite needs no browser CORS.
+        // When origins are configured (local ng serve without proxy, or direct Run URL), enable them.
+        if (corsOrigins.Length > 0)
+        {
+            policy.WithOrigins(corsOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.SetIsOriginAllowed(_ => false)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+    });
 });
 
 // MassTransit In-Memory Bus + MongoDB Outbox (Phase 1)
+// The Mongo outbox wraps every publish in a Mongo transaction, which standalone servers
+// (no replica set) reject with NotSupportedException — so it is config-gated and off in
+// Development, where publishes go straight to the in-memory bus instead.
+var useMongoOutbox = builder.Configuration.GetValue("MassTransit:UseMongoOutbox", true);
 builder.Services.AddMassTransit(cfg =>
 {
     cfg.AddConsumers(typeof(FinTrack.Modules.Categories.DependencyInjection).Assembly);
+    cfg.AddConsumers(typeof(FinTrack.Modules.Accounts.DependencyInjection).Assembly);
 
     cfg.UsingInMemory((context, busConfig) =>
     {
         busConfig.ConfigureEndpoints(context);
     });
 
-    cfg.AddMongoDbOutbox(outbox =>
+    if (useMongoOutbox)
     {
-        outbox.ClientFactory(sp => sp.GetRequiredService<MongoDB.Driver.IMongoClient>());
-        outbox.DatabaseFactory(sp => sp.GetRequiredService<MongoDB.Driver.IMongoDatabase>());
-        outbox.DuplicateDetectionWindow = TimeSpan.FromSeconds(30);
-        outbox.UseBusOutbox();
-    });
+        cfg.AddMongoDbOutbox(outbox =>
+        {
+            outbox.ClientFactory(sp => sp.GetRequiredService<MongoDB.Driver.IMongoClient>());
+            outbox.DatabaseFactory(sp => sp.GetRequiredService<MongoDB.Driver.IMongoDatabase>());
+            outbox.DuplicateDetectionWindow = TimeSpan.FromSeconds(30);
+            outbox.UseBusOutbox();
+        });
+    }
 });
 
 // JWT Authentication + Default Deny Fallback Authorization
-var jwtSigningKey = builder.Configuration["Jwt:SigningKey"] ?? "SuperSecretKeyForLocalDev1234567890!";
+const string localDevSigningKey = "SuperSecretKeyForLocalDev1234567890!";
+var jwtSigningKey = builder.Configuration["Jwt:SigningKey"] ?? localDevSigningKey;
+if (!builder.Environment.IsDevelopment() &&
+    (string.IsNullOrWhiteSpace(jwtSigningKey) || jwtSigningKey == localDevSigningKey))
+{
+    throw new InvalidOperationException(
+        "Jwt:SigningKey must be set to a strong secret in non-Development environments " +
+        "(use env var Jwt__SigningKey or Secret Manager).");
+}
+
 var key = Encoding.UTF8.GetBytes(jwtSigningKey);
 
 builder.Services.AddAuthentication(options =>
@@ -113,7 +161,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false;
+    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
     options.SaveToken = true;
     options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
     {
@@ -157,12 +205,29 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Behind Firebase Hosting / Cloud Load Balancer, honor X-Forwarded-* for HTTPS cookies.
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
+        | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+};
+forwardedHeadersOptions.KnownIPNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeadersOptions);
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseStaticFiles();
 app.UseCors("AllowFrontendApp");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
+    .AllowAnonymous();
 
 app.MapControllers();
 

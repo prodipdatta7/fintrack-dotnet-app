@@ -5,14 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinTrack.Modules.Users.Features.GetSettings;
 
 [ApiController]
-[Route("api/users")]
+[Route("api")]
 public sealed class GetSettingsController : ControllerBase
 {
     private readonly ISender _sender;
 
     public GetSettingsController(ISender sender) => _sender = sender;
 
-    [HttpGet("me/settings")]
+    [HttpGet("get-settings")]
     [ProducesResponseType(typeof(GetSettingsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetSettings(CancellationToken ct)

@@ -42,6 +42,9 @@ public sealed class Transaction : AuditableEntity
     [BsonElement("tags")]
     public string Tags { get; set; } = string.Empty;
 
+    [BsonElement("note")]
+    public string Note { get; set; } = string.Empty;
+
     [BsonElement("attachments")]
     public List<TransactionAttachment> Attachments { get; set; } = new();
 }

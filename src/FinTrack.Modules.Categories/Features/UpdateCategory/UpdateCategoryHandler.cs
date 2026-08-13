@@ -32,6 +32,7 @@ internal sealed class UpdateCategoryHandler : IRequestHandler<UpdateCategoryComm
             .Set(c => c.Type, request.Type)
             .Set(c => c.Icon, request.Icon)
             .Set(c => c.Color, request.Color)
+            .Set(c => c.BudgetLimit, request.BudgetLimit)
             .Set(c => c.ModifiedAt, DateTime.UtcNow);
 
         await _categories.UpdateOneAsync(

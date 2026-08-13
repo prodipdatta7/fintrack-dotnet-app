@@ -5,14 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinTrack.Modules.Transactions.Features.DeleteTransaction;
 
 [ApiController]
-[Route("api/transactions")]
+[Route("api")]
 public sealed class DeleteTransactionController : ControllerBase
 {
     private readonly ISender _sender;
 
     public DeleteTransactionController(ISender sender) => _sender = sender;
 
-    [HttpDelete("{id}")]
+    [HttpDelete("delete-transaction/{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

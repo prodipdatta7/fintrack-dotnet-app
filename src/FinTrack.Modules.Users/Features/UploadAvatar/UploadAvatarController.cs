@@ -5,14 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinTrack.Modules.Users.Features.UploadAvatar;
 
 [ApiController]
-[Route("api/users")]
+[Route("api")]
 public sealed class UploadAvatarController : ControllerBase
 {
     private readonly ISender _sender;
 
     public UploadAvatarController(ISender sender) => _sender = sender;
 
-    [HttpPost("me/avatar")]
+    [HttpPost("upload-avatar")]
     [ProducesResponseType(typeof(UploadAvatarResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

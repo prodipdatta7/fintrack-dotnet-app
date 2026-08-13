@@ -5,14 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinTrack.Modules.Users.Features.GetMe;
 
 [ApiController]
-[Route("api/users")]
+[Route("api")]
 public sealed class GetMeController : ControllerBase
 {
     private readonly ISender _sender;
 
     public GetMeController(ISender sender) => _sender = sender;
 
-    [HttpGet("me")]
+    [HttpGet("get-me")]
     [ProducesResponseType(typeof(GetMeResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

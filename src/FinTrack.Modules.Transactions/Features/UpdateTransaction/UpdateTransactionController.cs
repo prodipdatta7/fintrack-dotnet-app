@@ -5,14 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinTrack.Modules.Transactions.Features.UpdateTransaction;
 
 [ApiController]
-[Route("api/transactions")]
+[Route("api")]
 public sealed class UpdateTransactionController : ControllerBase
 {
     private readonly ISender _sender;
 
     public UpdateTransactionController(ISender sender) => _sender = sender;
 
-    [HttpPut("{id}")]
+    [HttpPut("update-transaction/{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

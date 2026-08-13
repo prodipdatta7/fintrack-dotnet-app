@@ -9,4 +9,7 @@ public sealed class Category : AuditableEntity
     public string Icon { get; set; } = string.Empty;
     public string Color { get; set; } = string.Empty;
     public bool IsDefault { get; set; }
+
+    /// <summary>Monthly spending cap. 0 = no limit.</summary>
+    public decimal BudgetLimit { get; set; }
 }

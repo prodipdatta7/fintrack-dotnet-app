@@ -21,5 +21,8 @@ public sealed class CreateTransactionValidator : AbstractValidator<CreateTransac
 
         RuleFor(x => x.AccountId)
             .NotEmpty().WithMessage("AccountId is required.");
+
+        RuleFor(x => x.Note)
+            .MaximumLength(500).WithMessage("Note cannot exceed 500 characters.");
     }
 }

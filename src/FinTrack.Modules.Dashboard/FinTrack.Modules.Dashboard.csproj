@@ -21,4 +21,8 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="FinTrack.Modules.Dashboard.Tests" />
+  </ItemGroup>
+
 </Project>

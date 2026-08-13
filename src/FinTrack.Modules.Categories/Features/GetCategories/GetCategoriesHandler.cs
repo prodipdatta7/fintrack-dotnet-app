@@ -21,11 +21,9 @@ internal sealed class GetCategoriesHandler : IRequestHandler<GetCategoriesQuery,
         GetCategoriesQuery request, CancellationToken cancellationToken)
     {
         var builder = Builders<Category>.Filter;
-        // User's own categories + system default categories
-        var filter = builder.Or(
-            builder.Eq(c => c.UserId, _currentUser.UserId),
-            builder.Eq(c => c.IsDefault, true)
-        );
+        // Defaults are seeded per user with IsDefault=true, so UserId alone scopes correctly;
+        // an OR on IsDefault would leak every user's seeded defaults to everyone.
+        var filter = builder.Eq(c => c.UserId, _currentUser.UserId);
 
         if (request.Type.HasValue)
             filter &= builder.Eq(c => c.Type, request.Type.Value);
@@ -40,7 +38,8 @@ internal sealed class GetCategoriesHandler : IRequestHandler<GetCategoriesQuery,
             c.Type,
             c.Icon,
             c.Color,
-            c.IsDefault)).ToList();
+            c.IsDefault,
+            c.BudgetLimit)).ToList();
 
         return Result<List<CategoryDto>>.Success(dtos);
     }

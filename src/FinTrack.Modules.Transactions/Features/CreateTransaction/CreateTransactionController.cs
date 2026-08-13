@@ -5,14 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinTrack.Modules.Transactions.Features.CreateTransaction;
 
 [ApiController]
-[Route("api/transactions")]
+[Route("api")]
 public sealed class CreateTransactionController : ControllerBase
 {
     private readonly ISender _sender;
 
     public CreateTransactionController(ISender sender) => _sender = sender;
 
-    [HttpPost]
+    [HttpPost("create-transaction")]
     [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

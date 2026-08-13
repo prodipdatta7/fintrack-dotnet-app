@@ -34,4 +34,30 @@ public class CreateCategoryValidatorTests
         // Assert
         result.IsValid.Should().BeFalse();
     }
+
+    [Fact]
+    public void Validate_WhenBudgetLimitIsZero_ReturnsNoErrors()
+    {
+        // Arrange
+        var command = new CreateCategoryCommand("Groceries", CategoryType.Expense, "cart", "#e74c3c", 0);
+
+        // Act
+        var result = _validator.Validate(command);
+
+        // Assert
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Validate_WhenBudgetLimitIsNegative_ReturnsError()
+    {
+        // Arrange
+        var command = new CreateCategoryCommand("Groceries", CategoryType.Expense, "cart", "#e74c3c", -1);
+
+        // Act
+        var result = _validator.Validate(command);
+
+        // Assert
+        result.IsValid.Should().BeFalse();
+    }
 }

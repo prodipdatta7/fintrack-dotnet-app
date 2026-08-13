@@ -6,14 +6,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinTrack.Modules.Categories.Features.GetCategory;
 
 [ApiController]
-[Route("api/categories")]
+[Route("api")]
 public sealed class GetCategoryController : ControllerBase
 {
     private readonly ISender _sender;
 
     public GetCategoryController(ISender sender) => _sender = sender;
 
-    [HttpGet("{id}")]
+    [HttpGet("get-category/{id}")]
     [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

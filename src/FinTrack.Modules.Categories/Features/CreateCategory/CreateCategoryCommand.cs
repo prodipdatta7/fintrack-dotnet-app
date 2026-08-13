@@ -8,4 +8,5 @@ public sealed record CreateCategoryCommand(
     string Name,
     CategoryType Type,
     string Icon,
-    string Color) : IRequest<Result<string>>;
+    string Color,
+    decimal BudgetLimit = 0) : IRequest<Result<string>>;

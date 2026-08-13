@@ -5,14 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinTrack.Modules.Users.Features.UpdateSettings;
 
 [ApiController]
-[Route("api/users")]
+[Route("api")]
 public sealed class UpdateSettingsController : ControllerBase
 {
     private readonly ISender _sender;
 
     public UpdateSettingsController(ISender sender) => _sender = sender;
 
-    [HttpPut("me/settings")]
+    [HttpPut("update-settings")]
     [ProducesResponseType(typeof(UpdateSettingsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

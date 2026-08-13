@@ -5,14 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinTrack.Modules.Users.Features.ExportData;
 
 [ApiController]
-[Route("api/users")]
+[Route("api")]
 public sealed class ExportDataController : ControllerBase
 {
     private readonly ISender _sender;
 
     public ExportDataController(ISender sender) => _sender = sender;
 
-    [HttpPost("data/export")]
+    [HttpPost("export-data")]
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

@@ -12,4 +12,5 @@ public sealed record CategoryDto(
     CategoryType Type,
     string Icon,
     string Color,
-    bool IsDefault);
+    bool IsDefault,
+    decimal BudgetLimit);

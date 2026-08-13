@@ -1,6 +1,7 @@
 using System.Globalization;
 using FinTrack.BuildingBlocks;
 using FinTrack.BuildingBlocks.Auth;
+using FinTrack.Contracts.Commands;
 using FinTrack.Contracts.IntegrationEvents;
 using FinTrack.Contracts.Queries;
 using FinTrack.Modules.Transactions.Domain;
@@ -42,6 +43,12 @@ internal sealed class CreateTransactionHandler : IRequestHandler<CreateTransacti
         if (!categoryValid)
             return Result<string>.Failure("Category does not exist or does not belong to the user.");
 
+        var accountValid = await _sender.Send(
+            new ValidateAccountExistsQuery(request.AccountId, _currentUser.UserId), cancellationToken);
+
+        if (!accountValid)
+            return Result<string>.Failure("Account does not exist, is closed, or does not belong to the user.");
+
         var transaction = new Transaction
         {
             Title = request.Title,
@@ -56,6 +63,7 @@ internal sealed class CreateTransactionHandler : IRequestHandler<CreateTransacti
             ReceiptFileName = request.ReceiptFileName ?? string.Empty,
             ReceiptUrl = request.ReceiptUrl ?? string.Empty,
             Tags = request.Tags ?? string.Empty,
+            Note = request.Note ?? string.Empty,
             Attachments = request.Attachments?.Select(a => new TransactionAttachment
             {
                 FileName = a.FileName,
@@ -73,7 +81,9 @@ internal sealed class CreateTransactionHandler : IRequestHandler<CreateTransacti
             EventType = "TransactionCreated",
             OccurredOnUtc = DateTime.UtcNow,
             Summary = $"Transaction created: {transaction.Title} (${amountFormatted})",
-            DataJson = System.Text.Json.JsonSerializer.Serialize(transaction)
+            DataJson = System.Text.Json.JsonSerializer.Serialize(transaction),
+            PerformedBy = _currentUser.Email ?? string.Empty,
+            Detail = "Created manual record entry"
         };
 
         try
@@ -93,6 +103,14 @@ internal sealed class CreateTransactionHandler : IRequestHandler<CreateTransacti
             await _transactionEvents.InsertOneAsync(@event, cancellationToken: cancellationToken);
         }
 
+        // Balance must update before the HTTP response so the client refresh sees the new total.
+        await _sender.Send(
+            new ApplyAccountBalanceDeltaCommand(
+                transaction.AccountId,
+                transaction.UserId,
+                SignedDelta(transaction.Amount, transaction.Type)),
+            cancellationToken);
+
         await _publishEndpoint.Publish(new TransactionCreated(
             transaction.Id,
             transaction.UserId,
@@ -104,4 +122,7 @@ internal sealed class CreateTransactionHandler : IRequestHandler<CreateTransacti
 
         return Result<string>.Success(transaction.Id);
     }
+
+    private static decimal SignedDelta(decimal amount, TransactionType type) =>
+        type == TransactionType.Income ? amount : -amount;
 }

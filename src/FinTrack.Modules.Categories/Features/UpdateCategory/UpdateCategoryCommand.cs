@@ -9,4 +9,5 @@ public sealed record UpdateCategoryCommand(
     string Name,
     CategoryType Type,
     string Icon,
-    string Color) : IRequest<Result>;
+    string Color,
+    decimal BudgetLimit = 0) : IRequest<Result>;

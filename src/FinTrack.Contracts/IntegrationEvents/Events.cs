@@ -19,6 +19,15 @@ public sealed record TransactionUpdated(
     decimal Amount,
     decimal PreviousAmount,
     string Type,
-    DateTime Date);
+    DateTime Date,
+    string PreviousAccountId,
+    string PreviousType);
+
+public sealed record TransactionDeleted(
+    string TransactionId,
+    string UserId,
+    string AccountId,
+    decimal Amount,
+    string Type);
 
 public sealed record CategoryCreated(string CategoryId, string UserId, string Name, string Type);

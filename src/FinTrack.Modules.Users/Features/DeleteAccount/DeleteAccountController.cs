@@ -5,14 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinTrack.Modules.Users.Features.DeleteAccount;
 
 [ApiController]
-[Route("api/users")]
+[Route("api")]
 public sealed class DeleteAccountController : ControllerBase
 {
     private readonly ISender _sender;
 
     public DeleteAccountController(ISender sender) => _sender = sender;
 
-    [HttpPost("me/delete-account")]
+    [HttpPost("delete-user-account")]
     [ProducesResponseType(typeof(DeleteAccountResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

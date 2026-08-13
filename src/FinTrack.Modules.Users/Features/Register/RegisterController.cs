@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinTrack.Modules.Users.Features.Register;
 
 [ApiController]
-[Route("api/users/auth")]
+[Route("api")]
 public sealed class RegisterController : ControllerBase
 {
     private readonly ISender _sender;

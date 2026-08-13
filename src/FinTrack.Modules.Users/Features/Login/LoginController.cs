@@ -1,17 +1,24 @@
+using FinTrack.BuildingBlocks.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 
 namespace FinTrack.Modules.Users.Features.Login;
 
 [ApiController]
-[Route("api/users/auth")]
+[Route("api")]
 public sealed class LoginController : ControllerBase
 {
     private readonly ISender _sender;
+    private readonly IConfiguration _configuration;
 
-    public LoginController(ISender sender) => _sender = sender;
+    public LoginController(ISender sender, IConfiguration configuration)
+    {
+        _sender = sender;
+        _configuration = configuration;
+    }
 
     [AllowAnonymous]
     [HttpPost("login")]
@@ -26,25 +33,15 @@ public sealed class LoginController : ControllerBase
         if (!result.IsSuccess)
             return BadRequest(new { error = result.Error });
 
-        var isSecure = Request.IsHttps;
-        var cookieOptionsAccess = new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = isSecure,
-            SameSite = SameSiteMode.Lax,
-            Expires = result.Value!.ExpiresAt
-        };
+        Response.Cookies.Append(
+            "access_token",
+            result.Value!.AccessToken,
+            AuthCookieOptions.AccessToken(Request, _configuration, result.Value!.ExpiresAt));
 
-        var cookieOptionsRefresh = new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = isSecure,
-            SameSite = SameSiteMode.Lax,
-            Expires = DateTime.UtcNow.AddDays(7)
-        };
-
-        Response.Cookies.Append("access_token", result.Value!.AccessToken, cookieOptionsAccess);
-        Response.Cookies.Append("refresh_token", result.Value!.RefreshToken, cookieOptionsRefresh);
+        Response.Cookies.Append(
+            "refresh_token",
+            result.Value!.RefreshToken,
+            AuthCookieOptions.RefreshToken(Request, _configuration, DateTime.UtcNow.AddDays(7)));
 
         return Ok(result.Value);
     }
@@ -53,14 +50,7 @@ public sealed class LoginController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult Logout()
     {
-        var isSecure = Request.IsHttps;
-        var deleteOptions = new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = isSecure,
-            SameSite = SameSiteMode.Lax
-        };
-
+        var deleteOptions = AuthCookieOptions.Delete(Request, _configuration);
         Response.Cookies.Delete("access_token", deleteOptions);
         Response.Cookies.Delete("refresh_token", deleteOptions);
 

@@ -20,5 +20,6 @@ public sealed class CreateTransactionCommand : IRequest<Result<string>>
     public string ReceiptFileName { get; init; } = string.Empty;
     public string ReceiptUrl { get; init; } = string.Empty;
     public string Tags { get; init; } = string.Empty;
+    public string Note { get; init; } = string.Empty;
     public List<TransactionAttachmentDto> Attachments { get; init; } = new();
 }

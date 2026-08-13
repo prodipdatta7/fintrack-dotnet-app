@@ -12,5 +12,6 @@ public sealed class UpdateTransactionValidator : AbstractValidator<UpdateTransac
         RuleFor(x => x.Type).IsInEnum();
         RuleFor(x => x.CategoryId).NotEmpty();
         RuleFor(x => x.AccountId).NotEmpty();
+        RuleFor(x => x.Note).MaximumLength(500);
     }
 }
