@@ -16,7 +16,7 @@ public sealed class UploadAvatarController : ControllerBase
     [ProducesResponseType(typeof(UploadAvatarResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> UploadAvatar([FromForm] IFormFile file, CancellationToken ct)
+    public async Task<IActionResult> UploadAvatar(IFormFile file, CancellationToken ct)
     {
         if (file is null || file.Length == 0)
             return BadRequest(new { error = "Please select a valid avatar file to upload." });

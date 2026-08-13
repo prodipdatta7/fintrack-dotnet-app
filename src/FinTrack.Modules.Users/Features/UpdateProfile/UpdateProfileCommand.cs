@@ -4,7 +4,6 @@ using MediatR;
 namespace FinTrack.Modules.Users.Features.UpdateProfile;
 
 public sealed record UpdateProfileCommand(
-    string Email,
     string FirstName,
     string LastName) : IRequest<Result<UpdateProfileResponse>>;
 

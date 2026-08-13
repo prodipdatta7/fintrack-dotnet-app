@@ -12,7 +12,7 @@ public class UpdateProfileValidatorTests
     public void Validate_WhenValidProfileData_ReturnsNoErrors()
     {
         // Arrange
-        var command = new UpdateProfileCommand("john.doe@example.com", "John", "Doe");
+        var command = new UpdateProfileCommand("John", "Doe");
 
         // Act
         var result = _validator.Validate(command);
@@ -22,14 +22,12 @@ public class UpdateProfileValidatorTests
     }
 
     [Theory]
-    [InlineData("", "John", "Doe")]
-    [InlineData("not-an-email", "John", "Doe")]
-    [InlineData("john.doe@example.com", "", "Doe")]
-    [InlineData("john.doe@example.com", "John", "")]
-    public void Validate_WhenInvalidProfileData_ReturnsErrors(string email, string firstName, string lastName)
+    [InlineData("", "Doe")]
+    [InlineData("John", "")]
+    public void Validate_WhenInvalidProfileData_ReturnsErrors(string firstName, string lastName)
     {
         // Arrange
-        var command = new UpdateProfileCommand(email, firstName, lastName);
+        var command = new UpdateProfileCommand(firstName, lastName);
 
         // Act
         var result = _validator.Validate(command);

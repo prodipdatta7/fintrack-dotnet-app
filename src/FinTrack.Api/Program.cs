@@ -1,4 +1,4 @@
-using System.Text;
+using System.Security.Claims;
 using FinTrack.BuildingBlocks.Auth;
 using FinTrack.BuildingBlocks.Behaviors;
 using FinTrack.BuildingBlocks.Persistence;
@@ -14,6 +14,7 @@ using MassTransit;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -141,18 +142,16 @@ builder.Services.AddMassTransit(cfg =>
     }
 });
 
-// JWT Authentication + Default Deny Fallback Authorization
-const string localDevSigningKey = "SuperSecretKeyForLocalDev1234567890!";
-var jwtSigningKey = builder.Configuration["Jwt:SigningKey"] ?? localDevSigningKey;
-if (!builder.Environment.IsDevelopment() &&
-    (string.IsNullOrWhiteSpace(jwtSigningKey) || jwtSigningKey == localDevSigningKey))
+// Firebase ID-token Authentication + Default Deny Fallback Authorization
+// Firebase Authentication is the sole identity provider: the API validates Google-signed ID
+// tokens via OIDC discovery / JWKS and resolves the token's uid to the Mongo user id.
+var firebaseProjectId = builder.Configuration["Firebase:ProjectId"];
+if (string.IsNullOrWhiteSpace(firebaseProjectId))
 {
     throw new InvalidOperationException(
-        "Jwt:SigningKey must be set to a strong secret in non-Development environments " +
-        "(use env var Jwt__SigningKey or Secret Manager).");
+        "Firebase:ProjectId must be configured. Firebase Authentication is the sole identity " +
+        "provider (set env var Firebase__ProjectId or Secret Manager).");
 }
-
-var key = Encoding.UTF8.GetBytes(jwtSigningKey);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -163,26 +162,60 @@ builder.Services.AddAuthentication(options =>
 {
     options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
     options.SaveToken = true;
-    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    // Keep raw JWT claim names ("user_id", "email", "name", "sub") instead of letting
+    // ASP.NET remap them to ClaimTypes.* URIs — Firebase ID-token handling depends on them.
+    options.MapInboundClaims = false;
+    options.Authority = $"https://securetoken.google.com/{firebaseProjectId}";
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key),
         ValidateIssuer = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "FinTrack",
+        ValidIssuer = $"https://securetoken.google.com/{firebaseProjectId}",
         ValidateAudience = true,
-        ValidAudience = builder.Configuration["Jwt:Audience"] ?? "FinTrack",
-        ClockSkew = TimeSpan.Zero
+        ValidAudience = firebaseProjectId,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.FromSeconds(30)
+        // Signing keys are resolved from Google's JWKS via OIDC discovery — no symmetric key.
     };
     options.Events = new JwtBearerEvents
     {
-        OnMessageReceived = context =>
+        OnTokenValidated = async context =>
         {
-            if (string.IsNullOrEmpty(context.Token) &&
-                context.Request.Cookies.TryGetValue("access_token", out var cookieToken))
+            try
             {
-                context.Token = cookieToken;
+                var principal = context.Principal!;
+                var firebaseUid = principal.FindFirst("user_id")?.Value
+                    ?? principal.FindFirst("sub")?.Value
+                    ?? throw new SecurityTokenException("Missing Firebase uid in token.");
+
+                var email = principal.FindFirst("email")?.Value;
+                var name = principal.FindFirst("name")?.Value;
+
+                DateTimeOffset? authTime = null;
+                var authTimeClaim = principal.FindFirst("auth_time")?.Value;
+                if (long.TryParse(authTimeClaim, out var authTimeUnix))
+                    authTime = DateTimeOffset.FromUnixTimeSeconds(authTimeUnix);
+
+                var resolver = context.HttpContext.RequestServices
+                    .GetRequiredService<FinTrack.Modules.Users.Services.IFirebaseUserResolver>();
+
+                var mongoId = await resolver.ResolveUserIdAsync(
+                    firebaseUid, email, name, authTime, context.HttpContext.RequestAborted);
+
+                var identity = (ClaimsIdentity)principal.Identity!;
+                // Replace any prior NameIdentifier (Firebase sub) with the Mongo id for ICurrentUser.
+                var existing = identity.FindFirst(ClaimTypes.NameIdentifier);
+                if (existing is not null)
+                    identity.RemoveClaim(existing);
+                identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, mongoId));
+
+                // MapInboundClaims=false keeps raw "email"; also add ClaimTypes.Email for ICurrentUser.
+                if (!string.IsNullOrWhiteSpace(email) && identity.FindFirst(ClaimTypes.Email) is null)
+                    identity.AddClaim(new Claim(ClaimTypes.Email, email));
             }
-            return Task.CompletedTask;
+            catch (SecurityTokenException ex)
+            {
+                context.Fail(ex.Message);
+            }
         }
     };
 });

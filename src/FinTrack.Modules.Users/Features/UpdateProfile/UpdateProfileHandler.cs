@@ -27,18 +27,8 @@ internal sealed class UpdateProfileHandler : IRequestHandler<UpdateProfileComman
         if (user is null)
             return Result<UpdateProfileResponse>.Failure("User not found.");
 
-        // If email is changing, check for uniqueness
-        if (!string.Equals(user.Email, request.Email, StringComparison.OrdinalIgnoreCase))
-        {
-            var existingUser = await _users
-                .Find(u => u.Email == request.Email && u.Id != user.Id)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (existingUser is not null)
-                return Result<UpdateProfileResponse>.Failure("Email address is already in use by another account.");
-        }
-
-        user.Email = request.Email;
+        // Email is owned by Firebase and is read-only here — never update it from this endpoint.
+        // AvatarUrl is owned by UploadAvatar — never accept it from this endpoint.
         user.FirstName = request.FirstName;
         user.LastName = request.LastName;
         user.ModifiedAt = DateTime.UtcNow;
