@@ -1,0 +1,53 @@
+services:
+  fintrack-api:
+    build:
+      context: ../..
+      dockerfile: docker/phase1/Dockerfile
+    container_name: fintrack-api-phase1
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MongoDb__ConnectionString=mongodb://mongo:27017/FinTrackDb
+      - Jwt__Issuer=FinTrack
+      - Jwt__Audience=FinTrack
+      - Jwt__SigningKey=SuperSecretKeyForLocalDev1234567890!
+      - Jwt__AccessTokenMinutes=15
+      - Jwt__RefreshTokenDays=7
+    depends_on:
+      mongo:
+        condition: service_healthy
+      mongo-init:
+        condition: service_completed_successfully
+
+  mongo:
+    image: mongo:latest
+    container_name: fintrack-mongo-phase1
+    ports:
+      - "27017:27017"
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - mongo_data_phase1:/data/db
+
+  mongo-init:
+    image: mongo:latest
+    container_name: fintrack-mongo-init-phase1
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: "no"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        until mongosh --host mongo:27017 --eval "try { if (rs.status().ok === 1) quit(0); } catch(e){} try { var res = rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo:27017'}]}); if (res.ok === 1 || res.codeName === 'AlreadyInitialized') quit(0); } catch(e){} quit(1);" > /dev/null 2>&1; do
+          sleep 2
+        done
+
+volumes:
+  mongo_data_phase1:

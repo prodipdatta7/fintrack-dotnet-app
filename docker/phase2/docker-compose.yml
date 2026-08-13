@@ -1,0 +1,87 @@
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: docker/phase2/Dockerfile
+      target: api
+    container_name: fintrack-api-phase2
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MongoDb__ConnectionString=mongodb://mongo:27017/FinTrackDb
+      - RabbitMq__Host=rabbitmq
+      - RabbitMq__Username=guest
+      - RabbitMq__Password=guest
+      - Jwt__Issuer=FinTrack
+      - Jwt__Audience=FinTrack
+      - Jwt__SigningKey=SuperSecretKeyForLocalDev1234567890!
+    depends_on:
+      mongo:
+        condition: service_healthy
+      mongo-init:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_started
+
+  host-worker:
+    build:
+      context: ../..
+      dockerfile: docker/phase2/Dockerfile
+      target: host
+    container_name: fintrack-host-phase2
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MongoDb__ConnectionString=mongodb://mongo:27017/FinTrackDb
+      - RabbitMq__Host=rabbitmq
+      - RabbitMq__Username=guest
+      - RabbitMq__Password=guest
+    depends_on:
+      mongo:
+        condition: service_healthy
+      mongo-init:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_started
+
+  mongo:
+    image: mongo:latest
+    container_name: fintrack-mongo-phase2
+    ports:
+      - "27017:27017"
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - mongo_data_phase2:/data/db
+
+  mongo-init:
+    image: mongo:latest
+    container_name: fintrack-mongo-init-phase2
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: "no"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        until mongosh --host mongo:27017 --eval "try { if (rs.status().ok === 1) quit(0); } catch(e){} try { var res = rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo:27017'}]}); if (res.ok === 1 || res.codeName === 'AlreadyInitialized') quit(0); } catch(e){} quit(1);" > /dev/null 2>&1; do
+          sleep 2
+        done
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: fintrack-rabbitmq-phase2
+    ports:
+      - "5672:5672"   # AMQP Protocol
+      - "15672:15672" # RabbitMQ Management Dashboard
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+
+volumes:
+  mongo_data_phase2:

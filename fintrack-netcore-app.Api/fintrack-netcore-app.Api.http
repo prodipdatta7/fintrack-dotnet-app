@@ -1,6 +1,0 @@
-@fintrack_netcore_app.Api_HostAddress = http://localhost:5171
-
-GET {{fintrack_netcore_app.Api_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
