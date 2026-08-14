@@ -1,43 +1,53 @@
-name: Build and Deploy .NET to Cloud Run
+name: Deploy to Google Cloud Run
 
 on:
   push:
     branches:
-      - main
+      - main # Change to 'master' if your default branch is named master
+
+env:
+  PROJECT_ID: warm-capsule-505504-j6
+  REGION: us-central1
+  SERVICE_NAME: fintrack-api
+  GAR_REPO: fintrack-dotnet-app
+  SERVICE_ACCOUNT: github-deployer@warm-capsule-505504-j6.iam.gserviceaccount.com
+  WIF_PROVIDER: projects/37295753542/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+
+permissions:
+  contents: "read"
+  id-token: "write"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: "read"
-      id-token: "write"
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Google Auth
+      - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: "projects/37295753542/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
-          service_account: "github-deployer@project-ff478c11-624a-44ac-9a5.iam.gserviceaccount.com"
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Authorize Docker Push
-        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+      - name: Configure Docker for Google Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
       - name: Build and Push Docker Image
         run: |
-          IMAGE_TAG="us-central1-docker.pkg.dev/project-ff478c11-624a-44ac-9a5/dotnet-apps/dotnet-web-app:${{ github.sha }}"
-          docker build -t $IMAGE_TAG .
-          docker push $IMAGE_TAG
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/api:${{ github.sha }}"
+          docker build -t $IMAGE .
+          docker push $IMAGE
 
       - name: Deploy to Cloud Run
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: dotnet-web-app
-          region: us-central1
-          image: us-central1-docker.pkg.dev/project-ff478c11-624a-44ac-9a5/dotnet-apps/dotnet-web-app:${{ github.sha }}
-          flags: "--allow-unauthenticated"
+        run: |
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/api:${{ github.sha }}"
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image=$IMAGE \
+            --region=${{ env.REGION }} \
+            --platform=managed \
+            --allow-unauthenticated
