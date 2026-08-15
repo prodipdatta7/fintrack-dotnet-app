@@ -1,7 +1,8 @@
+using FinTrack.BuildingBlocks.Auth;
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace FinTrack.Modules.Users.Services;
 
@@ -17,11 +18,11 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
 
     private static readonly object AppLock = new();
 
-    private readonly IConfiguration _configuration;
+    private readonly FirebaseOptions _options;
 
-    public FirebaseAuthService(IConfiguration configuration)
+    public FirebaseAuthService(IOptions<FirebaseOptions> options)
     {
-        _configuration = configuration;
+        _options = options.Value;
     }
 
     public async Task RevokeRefreshTokensAsync(string firebaseUid, CancellationToken cancellationToken)
@@ -67,10 +68,10 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
 
     private AppOptions BuildOptions()
     {
-        var projectId = _configuration["Firebase:ProjectId"];
+        var projectId = _options.ProjectId;
 
-        var credentialJson = _configuration["Firebase:CredentialJson"];
-        var credentialPath = _configuration["Firebase:CredentialPath"]
+        var credentialJson = _options.CredentialJson;
+        var credentialPath = _options.CredentialPath
             ?? Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
 
         GoogleCredential credential;
