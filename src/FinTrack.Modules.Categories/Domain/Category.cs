@@ -5,6 +5,10 @@ namespace FinTrack.Modules.Categories.Domain;
 public sealed class Category : AuditableEntity
 {
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>Lowercased key used by the case-insensitive unique index.</summary>
+    public string NormalizedName { get; set; } = string.Empty;
+
     public CategoryType Type { get; set; }
     public string Icon { get; set; } = string.Empty;
     public string Color { get; set; } = string.Empty;

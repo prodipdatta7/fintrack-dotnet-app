@@ -1,3 +1,4 @@
+using FinTrack.Modules.Categories.Infrastructure;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,6 +12,8 @@ public static class DependencyInjection
             cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
 
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
+
+        services.AddHostedService<CategoryDataInitializer>();
 
         return services;
     }

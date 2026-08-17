@@ -27,8 +27,24 @@ internal sealed class UpdateCategoryHandler : IRequestHandler<UpdateCategoryComm
         if (category is null)
             return Result.Failure("Category not found or default categories cannot be modified.");
 
+        var name = request.Name.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+            return Result.Failure("Category name is required.");
+
+        var normalized = NameKeys.Normalize(name);
+
+        var collision = await _categories
+            .Find(c => c.UserId == _currentUser.UserId
+                && c.Id != request.Id
+                && c.NormalizedName == normalized)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (collision is not null)
+            return Result.Failure($"A category named \"{collision.Name}\" already exists.");
+
         var update = Builders<Category>.Update
-            .Set(c => c.Name, request.Name)
+            .Set(c => c.Name, name)
+            .Set(c => c.NormalizedName, normalized)
             .Set(c => c.Type, request.Type)
             .Set(c => c.Icon, request.Icon)
             .Set(c => c.Color, request.Color)

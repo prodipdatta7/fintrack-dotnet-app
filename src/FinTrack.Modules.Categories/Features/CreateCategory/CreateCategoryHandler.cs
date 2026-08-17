@@ -27,9 +27,23 @@ internal sealed class CreateCategoryHandler : IRequestHandler<CreateCategoryComm
     public async Task<Result<string>> Handle(
         CreateCategoryCommand request, CancellationToken cancellationToken)
     {
+        var name = request.Name.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+            return Result<string>.Failure("Category name is required.");
+
+        var normalized = NameKeys.Normalize(name);
+
+        var existing = await _categories
+            .Find(c => c.UserId == _currentUser.UserId && c.NormalizedName == normalized)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (existing is not null)
+            return Result<string>.Failure($"A category named \"{existing.Name}\" already exists.");
+
         var category = new Category
         {
-            Name = request.Name,
+            Name = name,
+            NormalizedName = normalized,
             Type = request.Type,
             Icon = request.Icon,
             Color = request.Color,
@@ -39,7 +53,14 @@ internal sealed class CreateCategoryHandler : IRequestHandler<CreateCategoryComm
             CreatedBy = _currentUser.Email
         };
 
-        await _categories.InsertOneAsync(category, cancellationToken: cancellationToken);
+        try
+        {
+            await _categories.InsertOneAsync(category, cancellationToken: cancellationToken);
+        }
+        catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
+        {
+            return Result<string>.Failure($"A category named \"{name}\" already exists.");
+        }
 
         await _publishEndpoint.Publish(new CategoryCreated(
             category.Id,

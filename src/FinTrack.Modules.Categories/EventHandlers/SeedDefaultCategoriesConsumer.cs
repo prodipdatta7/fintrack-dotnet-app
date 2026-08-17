@@ -20,12 +20,12 @@ public sealed class SeedDefaultCategoriesConsumer : IConsumer<UserRegistered>
 
         var defaultCategories = new List<Category>
         {
-            new() { Name = "Salary", Type = CategoryType.Income, Icon = "cash", Color = "#2ecc71", IsDefault = true, BudgetLimit = 0, UserId = evt.UserId, CreatedBy = "system" },
-            new() { Name = "Investments", Type = CategoryType.Income, Icon = "trending-up", Color = "#27ae60", IsDefault = true, BudgetLimit = 0, UserId = evt.UserId, CreatedBy = "system" },
-            new() { Name = "Food & Dining", Type = CategoryType.Expense, Icon = "utensils", Color = "#e74c3c", IsDefault = true, BudgetLimit = 0, UserId = evt.UserId, CreatedBy = "system" },
-            new() { Name = "Transportation", Type = CategoryType.Expense, Icon = "car", Color = "#e67e22", IsDefault = true, BudgetLimit = 0, UserId = evt.UserId, CreatedBy = "system" },
-            new() { Name = "Housing & Utilities", Type = CategoryType.Expense, Icon = "home", Color = "#3498db", IsDefault = true, BudgetLimit = 0, UserId = evt.UserId, CreatedBy = "system" },
-            new() { Name = "Entertainment", Type = CategoryType.Expense, Icon = "film", Color = "#9b59b6", IsDefault = true, BudgetLimit = 0, UserId = evt.UserId, CreatedBy = "system" }
+            new() { Name = "Salary", NormalizedName = "salary", Type = CategoryType.Income, Icon = "cash", Color = "#2ecc71", IsDefault = true, BudgetLimit = 0, UserId = evt.UserId, CreatedBy = "system" },
+            new() { Name = "Investments", NormalizedName = "investments", Type = CategoryType.Income, Icon = "trending-up", Color = "#27ae60", IsDefault = true, BudgetLimit = 0, UserId = evt.UserId, CreatedBy = "system" },
+            new() { Name = "Food & Dining", NormalizedName = "food & dining", Type = CategoryType.Expense, Icon = "utensils", Color = "#e74c3c", IsDefault = true, BudgetLimit = 0, UserId = evt.UserId, CreatedBy = "system" },
+            new() { Name = "Transportation", NormalizedName = "transportation", Type = CategoryType.Expense, Icon = "car", Color = "#e67e22", IsDefault = true, BudgetLimit = 0, UserId = evt.UserId, CreatedBy = "system" },
+            new() { Name = "Housing & Utilities", NormalizedName = "housing & utilities", Type = CategoryType.Expense, Icon = "home", Color = "#3498db", IsDefault = true, BudgetLimit = 0, UserId = evt.UserId, CreatedBy = "system" },
+            new() { Name = "Entertainment", NormalizedName = "entertainment", Type = CategoryType.Expense, Icon = "film", Color = "#9b59b6", IsDefault = true, BudgetLimit = 0, UserId = evt.UserId, CreatedBy = "system" }
         };
 
         await _categories.InsertManyAsync(defaultCategories, cancellationToken: context.CancellationToken);
