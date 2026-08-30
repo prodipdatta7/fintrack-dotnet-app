@@ -11,6 +11,7 @@
     <Project Path="src/FinTrack.Modules.Dashboard/FinTrack.Modules.Dashboard.csproj" />
     <Project Path="src/FinTrack.Modules.Budgets/FinTrack.Modules.Budgets.csproj" />
     <Project Path="src/FinTrack.Modules.Accounts/FinTrack.Modules.Accounts.csproj" />
+    <Project Path="src/FinTrack.Modules.Assistant/FinTrack.Modules.Assistant.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/FinTrack.Modules.Users.Tests/FinTrack.Modules.Users.Tests.csproj" />
@@ -19,5 +20,6 @@
     <Project Path="tests/FinTrack.Modules.Dashboard.Tests/FinTrack.Modules.Dashboard.Tests.csproj" />
     <Project Path="tests/FinTrack.Modules.Budgets.Tests/FinTrack.Modules.Budgets.Tests.csproj" />
     <Project Path="tests/FinTrack.Modules.Accounts.Tests/FinTrack.Modules.Accounts.Tests.csproj" />
+    <Project Path="tests/FinTrack.Modules.Assistant.Tests/FinTrack.Modules.Assistant.Tests.csproj" />
   </Folder>
 </Solution>

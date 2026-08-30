@@ -1,5 +1,6 @@
 using FinTrack.BuildingBlocks.Behaviors;
 using FinTrack.Modules.Accounts;
+using FinTrack.Modules.Assistant;
 using FinTrack.Modules.Budgets;
 using FinTrack.Modules.Categories;
 using FinTrack.Modules.Dashboard;
@@ -19,6 +20,7 @@ public static class ModuleExtensions
         services.AddDashboardModule();
         services.AddBudgetsModule();
         services.AddAccountsModule();
+        services.AddAssistantModule();
 
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
@@ -33,7 +35,8 @@ public static class ModuleExtensions
             .AddApplicationPart(typeof(FinTrack.Modules.Categories.DependencyInjection).Assembly)
             .AddApplicationPart(typeof(FinTrack.Modules.Dashboard.DependencyInjection).Assembly)
             .AddApplicationPart(typeof(FinTrack.Modules.Budgets.DependencyInjection).Assembly)
-            .AddApplicationPart(typeof(FinTrack.Modules.Accounts.DependencyInjection).Assembly);
+            .AddApplicationPart(typeof(FinTrack.Modules.Accounts.DependencyInjection).Assembly)
+            .AddApplicationPart(typeof(FinTrack.Modules.Assistant.DependencyInjection).Assembly);
 
         return services;
     }
