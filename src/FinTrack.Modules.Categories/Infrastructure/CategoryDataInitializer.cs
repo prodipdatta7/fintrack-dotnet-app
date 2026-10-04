@@ -1,4 +1,5 @@
 using FinTrack.Modules.Categories.Domain;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
@@ -17,29 +18,117 @@ public sealed class CategoryDataInitializer : IHostedService
     private readonly IMongoCollection<Category> _categories;
     private readonly IMongoCollection<UserTag> _tags;
     private readonly IMongoCollection<CategoryTag> _categoryTags;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<CategoryDataInitializer> _logger;
 
-    public CategoryDataInitializer(IMongoDatabase database, ILogger<CategoryDataInitializer> logger)
+    public CategoryDataInitializer(
+        IMongoDatabase database,
+        IConfiguration configuration,
+        ILogger<CategoryDataInitializer> logger)
     {
         _database = database;
         _categories = database.GetCollection<Category>("categories");
         _tags = database.GetCollection<UserTag>("tags");
         _categoryTags = database.GetCollection<CategoryTag>("category_tags");
+        _configuration = configuration;
         _logger = logger;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        await BackfillCategoryKeysAsync(cancellationToken);
-        await BackfillTagKeysAsync(cancellationToken);
-        await BackfillCategoryTagIdsAsync(cancellationToken);
-        await DeduplicateCategoriesAsync(cancellationToken);
-        await DeduplicateTagsAsync(cancellationToken);
-        await DeduplicateCategoryTagsAsync(cancellationToken);
-        await CreateUniqueIndexesAsync(cancellationToken);
+        var (server, dbName) = GetTarget();
+        _logger.LogInformation("Connecting to MongoDB {Server}, database {Database} ...", server, dbName);
+
+        const int maxAttempts = 5;
+        Exception? lastError = null;
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                await _database.RunCommandAsync<BsonDocument>(
+                    new BsonDocument("ping", 1), cancellationToken: cancellationToken);
+                lastError = null;
+                break;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex) when (ex is MongoException || ex is TimeoutException)
+            {
+                lastError = ex;
+                if (attempt == maxAttempts)
+                {
+                    break;
+                }
+
+                _logger.LogWarning(ex,
+                    "MongoDB ping failed (attempt {Attempt}/{Max}) to {Server}. Retrying in 2s ...",
+                    attempt, maxAttempts, server);
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+            }
+        }
+
+        if (lastError is not null)
+        {
+            throw new InvalidOperationException(BuildUnreachableMessage(server, dbName), lastError);
+        }
+
+        try
+        {
+            await BackfillCategoryKeysAsync(cancellationToken);
+            await BackfillTagKeysAsync(cancellationToken);
+            await BackfillCategoryTagIdsAsync(cancellationToken);
+            await DeduplicateCategoriesAsync(cancellationToken);
+            await DeduplicateTagsAsync(cancellationToken);
+            await DeduplicateCategoryTagsAsync(cancellationToken);
+            await CreateUniqueIndexesAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is MongoException || ex is TimeoutException)
+        {
+            throw new InvalidOperationException(BuildUnreachableMessage(server, dbName), ex);
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    private (string Server, string Database) GetTarget()
+    {
+        var dbName = _database.DatabaseNamespace.DatabaseName;
+        try
+        {
+            var connectionString = _configuration["MongoDb:ConnectionString"];
+            if (!string.IsNullOrWhiteSpace(connectionString))
+            {
+                return (new MongoUrl(connectionString).Server.ToString(), dbName);
+            }
+        }
+        catch
+        {
+            // Fall through to client settings below.
+        }
+
+        try
+        {
+            return (_database.Client.Settings.Server.ToString(), dbName);
+        }
+        catch
+        {
+            return ("<unknown>", dbName);
+        }
+    }
+
+    private static string BuildUnreachableMessage(string server, string dbName)
+    {
+        return $"MongoDB unreachable at {server} (database '{dbName}'). "
+            + "1) Local: start Mongo via 'docker compose -f docker/phase1/docker-compose.yml up -d' (expects mongodb://localhost:27017). "
+            + "2) Atlas: set $env:MongoDb__ConnectionString='mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/?retryWrites=true&w=majority' "
+            + "in the SAME terminal (no ?directConnection=true) and whitelist your IP in Atlas Network Access.";
+    }
 
     private async Task BackfillCategoryKeysAsync(CancellationToken ct)
     {
